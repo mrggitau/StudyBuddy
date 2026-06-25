@@ -1,22 +1,23 @@
-// Importing tools
+// Import tools
 const express = require('express');   
 const cors = require('cors');         
 require('dotenv').config();           
-
-// Create the server
-const app = express();                
+const app = express();                //create server instance
 const PORT = process.env.PORT || 5000; 
 
-// Middleware – things that run on every request
-app.use(cors());                       
-app.use(express.json());               
+// Middleware 
+app.use(cors());                       // Allow frontend to talk to backend
+app.use(express.json());               // Automatically parse JSON data from requests
 
-// tester
+// Routes – all the endpoints your API has
+app.use('/api/auth', require('./routes/auth')); 
+
+// Test route – check if server is alive
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', message: 'StudyBuddy API is running!' });
 });
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`🚀 StudyBuddy backend running on http://localhost:${PORT}`);
+    console.log(`StudyBuddy backend running on http://localhost:${PORT}`);
 });

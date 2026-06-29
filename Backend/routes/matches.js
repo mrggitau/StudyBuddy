@@ -1,0 +1,143 @@
+const express = require('express');
+const db = require('../models/db');
+const auth = require('../middleware/auth');
+const router = express.Router();
+
+// This finds compatible StudyBuddies
+router.get('/', auth, async (req, res) => {
+    try {
+        const studentId = req.user.id;
+
+        // Get the logged-in student's profile (courses, availability, preferences)
+        const [myCourses] = await db.query(
+            'SELECT course_code FROM STUDENT_COURSES sc JOIN COURSES c ON sc.course_id = c.course_id WHERE sc.student_id = ?',
+            [studentId]
+        );
+
+        const [myAvailability] = await db.query(
+            'SELECT day_of_week, time_start, time_end FROM AVAILABILITY WHERE student_id = ?',
+            [studentId]
+        );
+
+        const [myPreferences] = await db.query(
+            'SELECT study_environment, study_pace FROM PREFERENCES WHERE student_id = ?',
+            [studentId]
+        );
+
+        // If student hasn't set up their profile, return empty list
+        if (myCourses.length === 0 || myAvailability.length === 0 || myPreferences.length === 0) {
+            return res.json({
+                message: 'Please complete your profile first.',
+                matches: []
+            });
+        }
+
+        // Get all other verified students (exclude the logged-in student)
+        const [otherStudents] = await db.query(
+            `SELECT s.student_id, s.name, s.email 
+            FROM STUDENT s
+            JOIN VERIFICATION v ON s.student_id = v.student_id
+            WHERE v.verification_status = 'verified' AND s.student_id != ?`,
+            [studentId]
+        );
+
+        if (otherStudents.length === 0) {
+            return res.json({
+                message: 'No other verified students found.',
+                matches: []
+            });
+        }
+
+        // For each student, calculate compatibility score
+        const matches = [];
+
+        for (const other of otherStudents) {
+            // Get other student's courses
+            const [otherCourses] = await db.query(
+                'SELECT course_code FROM STUDENT_COURSES sc JOIN COURSES c ON sc.course_id = c.course_id WHERE sc.student_id = ?',
+                [other.student_id]
+            );
+
+            // Get other student's availability
+            const [otherAvailability] = await db.query(
+                'SELECT day_of_week, time_start, time_end FROM AVAILABILITY WHERE student_id = ?',
+                [other.student_id]
+            );
+
+            // Get other student's preferences
+            const [otherPreferences] = await db.query(
+                'SELECT study_environment, study_pace FROM PREFERENCES WHERE student_id = ?',
+                [other.student_id]
+            );
+
+            // If other student hasn't completed profile, skip them
+            if (otherCourses.length === 0 || otherAvailability.length === 0 || otherPreferences.length === 0) {
+                continue;
+            }
+
+            // Calculate compatibility score
+            let score = 0;
+
+            // CRITERION 1: Course overlap (max 50 points) - MOST IMPORTANT
+            const myCourseCodes = myCourses.map(c => c.course_code);
+            const otherCourseCodes = otherCourses.map(c => c.course_code);
+            const commonCourses = myCourseCodes.filter(c => otherCourseCodes.includes(c));
+            score += Math.min(commonCourses.length * 25, 50); // Changed: 50 max, each course 25 points
+
+            // CRITERION 2: Availability overlap (max 30 points) - MEDIUM IMPORTANCE
+            let availabilityMatch = false;
+            for (const mySlot of myAvailability) {
+                for (const otherSlot of otherAvailability) {
+                    if (mySlot.day_of_week === otherSlot.day_of_week) {
+                        // Check if time ranges overlap
+                        const myStart = mySlot.time_start;
+                        const myEnd = mySlot.time_end;
+                        const otherStart = otherSlot.time_start;
+                        const otherEnd = otherSlot.time_end;
+                        if (myStart < otherEnd && otherStart < myEnd) {
+                            availabilityMatch = true;
+                            break;
+                        }
+                    }
+                }
+                if (availabilityMatch) break;
+            }
+            if (availabilityMatch) score += 30; // Unchanged
+
+            // CRITERION 3: Preference alignment (max 20 points) - LEAST IMPORTANT
+            const myPref = myPreferences[0];
+            const otherPref = otherPreferences[0];
+            if (myPref.study_environment === otherPref.study_environment) score += 12; // Changed from 20
+            if (myPref.study_pace === otherPref.study_pace) score += 8; // Changed from 10
+
+            // Only include students with at least some compatibility
+            if (score > 0) {
+                matches.push({
+                    id: other.student_id,
+                    name: other.name,
+                    email: other.email,
+                    common_courses: commonCourses,
+                    compatibility_score: Math.min(score, 100),
+                    availability: otherAvailability
+                });
+            }
+        }
+
+        // Sort matches by compatibility score (highest first)
+        matches.sort((a, b) => b.compatibility_score - a.compatibility_score);
+
+        // Return the ranked list
+        res.json({
+            message: `Found ${matches.length} compatible study partner(s)`,
+            matches: matches
+        });
+
+    } catch (err) {
+        console.error('Matching error:', err);
+        res.status(500).json({
+            message: 'Server error. Please try again later.'
+        });
+    }
+});
+
+module.exports = router;

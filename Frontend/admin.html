@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="admin-box">
+            <div class="admin-header">
+                <h1>StudyBuddy</h1>
+                <div class="user-info">
+                    <span id="adminName">Welcome, Admin</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="admin-actions">
+                <button id="loadStudentsBtn" class="admin-btn"> View All Students</button>
+                <button id="loadLogsBtn" class="admin-btn"> View Activity Logs</button>
+            </div>
+
+            <div id="adminContent">
+                <p class="placeholder">Click "View All Students" to manage student accounts.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

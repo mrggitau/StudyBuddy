@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard">
+            <div class="header">
+                <h1>StudyBuddy</h1>
+                <div class="user-info">
+                    <span id="userName">Welcome, Student</span>
+                    <button id="logoutBtn" class="logout-btn">Logout</button>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card" onclick="window.location.href='profile.html'">
+                    <span class="emoji">📝</span>
+                    <h3>Create / Edit Profile</h3>
+                    <p>Set your courses, availability, and study preferences</p>
+                </div>
+                <div class="card" onclick="window.location.href='matches.html'">
+                    <span class="emoji">🔍</span>
+                    <h3>Find Study Partners</h3>
+                    <p>Get matched with compatible students</p>
+                </div>
+                <div class="card" onclick="window.location.href='matches.html'">
+                    <span class="emoji">👥</span>
+                    <h3>View My Matches</h3>
+                    <p>See pending and accepted matches</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

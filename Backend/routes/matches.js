@@ -82,7 +82,7 @@ router.get('/', auth, async (req, res) => {
             const myCourseCodes = myCourses.map(c => c.course_code);
             const otherCourseCodes = otherCourses.map(c => c.course_code);
             const commonCourses = myCourseCodes.filter(c => otherCourseCodes.includes(c));
-            score += Math.min(commonCourses.length * 25, 50); // Changed: 50 max, each course 25 points
+            score += Math.min(commonCourses.length * 25, 50);
 
             // CRITERION 2: Availability overlap (max 30 points) - MEDIUM IMPORTANCE
             let availabilityMatch = false;
@@ -102,13 +102,13 @@ router.get('/', auth, async (req, res) => {
                 }
                 if (availabilityMatch) break;
             }
-            if (availabilityMatch) score += 30; // Unchanged
+            if (availabilityMatch) score += 30;
 
             // CRITERION 3: Preference alignment (max 20 points) - LEAST IMPORTANT
             const myPref = myPreferences[0];
             const otherPref = otherPreferences[0];
-            if (myPref.study_environment === otherPref.study_environment) score += 12; // Changed from 20
-            if (myPref.study_pace === otherPref.study_pace) score += 8; // Changed from 10
+            if (myPref.study_environment === otherPref.study_environment) score += 12;
+            if (myPref.study_pace === otherPref.study_pace) score += 8;
 
             // Only include students with at least some compatibility
             if (score > 0) {
@@ -136,6 +136,81 @@ router.get('/', auth, async (req, res) => {
         console.error('Matching error:', err);
         res.status(500).json({
             message: 'Server error. Please try again later.'
+        });
+    }
+});
+
+// ============================================
+// SEND CONNECTION REQUEST – POST /api/matches/request
+// ============================================
+// This runs when a student clicks "Send Request" on a match
+router.post('/request', auth, async (req, res) => {
+    const studentId = req.user.id;
+    const { student_id: targetId } = req.body;
+
+    // Make sure we got a student ID
+    if (!targetId) {
+        return res.status(400).json({ message: 'Student ID is required.' });
+    }
+
+    // Can't send a request to yourself
+    if (parseInt(targetId) === studentId) {
+        return res.status(400).json({ message: 'You cannot send a request to yourself.' });
+    }
+
+    try {
+        // Check if the target student exists and is verified
+        const [targetStudent] = await db.query(
+            `SELECT s.student_id, v.verification_status 
+             FROM STUDENT s
+             JOIN VERIFICATION v ON s.student_id = v.student_id
+             WHERE s.student_id = ?`,
+            [targetId]
+        );
+
+        if (targetStudent.length === 0) {
+            return res.status(404).json({ message: 'Student not found.' });
+        }
+
+        if (targetStudent[0].verification_status !== 'verified') {
+            return res.status(400).json({ message: 'This student is not yet verified.' });
+        }
+
+        // Check if a match already exists between these two students
+        // IMPORTANT: MATCH is a reserved word – wrap in backticks
+        const [existing] = await db.query(
+            `SELECT * FROM \`MATCH\` 
+             WHERE (student_id_1 = ? AND student_id_2 = ?) 
+                OR (student_id_1 = ? AND student_id_2 = ?)`,
+            [studentId, targetId, targetId, studentId]
+        );
+
+        if (existing.length > 0) {
+            const status = existing[0].status;
+            if (status === 'pending') {
+                return res.status(400).json({ message: 'A request has already been sent.' });
+            } else if (status === 'accepted') {
+                return res.status(400).json({ message: 'You are already matched with this student.' });
+            } else if (status === 'rejected') {
+                return res.status(400).json({ message: 'This request was rejected.' });
+            }
+        }
+
+        // Insert the match request – wrap MATCH in backticks
+        await db.query(
+            `INSERT INTO \`MATCH\` (student_id_1, student_id_2, status, request_date) 
+             VALUES (?, ?, ?, CURDATE())`,
+            [studentId, targetId, 'pending']
+        );
+
+        res.status(201).json({ 
+            message: 'Connection request sent successfully!' 
+        });
+
+    } catch (err) {
+        console.error('Send request error:', err);
+        res.status(500).json({ 
+            message: 'Server error. Please try again later.' 
         });
     }
 });

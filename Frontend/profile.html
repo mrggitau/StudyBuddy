@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy – Profile</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="profile-box">
+            <h1>📚 Your Profile</h1>
+            <p class="subtitle">Set your courses, availability, and study preferences</p>
+
+            <form id="profileForm">
+                <!-- Courses Section -->
+                <div class="form-group">
+                    <label>Courses</label>
+                    <div class="input-group">
+                        <select id="courseSelect">
+                            <option value="">-- Select Course --</option>
+                            <option value="BBT 2204">BBT 2204 – IT Project</option>
+                            <option value="BBT 3103">BBT 3103 – Network Routing</option>
+                            <option value="BBT 3105">BBT 3105 – Cost Accounting</option>
+                            <option value="BBT 4403">BBT 4403 – Operating Systems</option>
+                            <option value="BBT 6767">BBT 6767 – Probability & Stats</option>
+                            <option value="BBT 3201">BBT 3201 – Ethics</option>
+                            <option value="BBT 9669">BBT 9669 – Project Management</option>
+                        </select>
+                        <button type="button" id="addCourseBtn" class="small-btn">+ Add</button>
+                    </div>
+                    <ul id="courseList" class="tag-list"></ul>
+                </div>
+
+                <!-- Availability Section -->
+                <div class="form-group">
+                    <label>Availability</label>
+                    <div class="input-group">
+                        <select id="daySelect">
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                        <input type="time" id="timeStart" value="14:00">
+                        <input type="time" id="timeEnd" value="16:00">
+                        <button type="button" id="addSlotBtn" class="small-btn">+ Add</button>
+                    </div>
+                    <ul id="availabilityList" class="tag-list"></ul>
+                </div>
+
+                <!-- Preferences Section -->
+                <div class="form-group">
+                    <label>Study Environment</label>
+                    <select id="environment">
+                        <option value="Quiet">Quiet</option>
+                        <option value="Café">Café</option>
+                        <option value="Library">Library</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Study Pace</label>
+                    <select id="pace">
+                        <option value="Slow">Slow</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Fast">Fast</option>
+                    </select>
+                </div>
+
+                <button type="submit">Save Profile</button>
+            </form>
+
+            <div id="message" class="message"></div>
+            <p><a href="dashboard.html">⬅ Back to Dashboard</a></p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>

@@ -97,13 +97,23 @@ router.post('/login', async (req, res) => {
         // If verification record exists and status is 'verified', set to true
         const isVerified = verification.length > 0 && verification[0].verification_status === 'verified';
 
+        // check for admin role
+        let role = 'student';
+        const [adminCheck] = await db.query(
+            'SELECT * FROM ADMIN WHERE email = ?',
+            [email]
+        );
+        if (adminCheck.length > 0) {
+            role = 'admin';
+        }
+
         // This generate a JWT token that proves the student is logged in for future requests
         const token = jwt.sign(
             { 
                 id: student.student_id,          
                 email: student.email,           
                 name: student.name,              
-                role: 'student',                 // Always 'student' for regular users
+                role: role,                      // Now uses the role we checked
                 verified: isVerified             
             },
             process.env.JWT_SECRET,              // Secret key from .env file

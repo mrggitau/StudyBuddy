@@ -13,6 +13,7 @@ app.use(express.json());               // Automatically parse JSON data from req
 app.use('/api/auth', require('./routes/auth')); 
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/matches', require('./routes/matches'));
+app.use('/api/admin', require('./routes/admin')); 
 
 // Test route – check if server is alive
 app.get('/api/health', (req, res) => {

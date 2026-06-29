@@ -11,6 +11,7 @@ app.use(express.json());               // Automatically parse JSON data from req
 
 // Routes – all the endpoints your API has
 app.use('/api/auth', require('./routes/auth')); 
+app.use('/api/profile', require('./routes/profile'));
 
 // Test route – check if server is alive
 app.get('/api/health', (req, res) => {

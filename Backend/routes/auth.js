@@ -97,15 +97,14 @@ router.post('/login', async (req, res) => {
         // If verification record exists and status is 'verified', set to true
         const isVerified = verification.length > 0 && verification[0].verification_status === 'verified';
 
-        // Generate a JWT token (like a digital ID card)
-        // This token proves the student is logged in for future requests
+        // This generate a JWT token that proves the student is logged in for future requests
         const token = jwt.sign(
             { 
-                id: student.student_id,          // Student's ID
-                email: student.email,            // Student's email
-                name: student.name,              // Student's name
+                id: student.student_id,          
+                email: student.email,           
+                name: student.name,              
                 role: 'student',                 // Always 'student' for regular users
-                verified: isVerified             // Whether admin has verified them
+                verified: isVerified             
             },
             process.env.JWT_SECRET,              // Secret key from .env file
             { expiresIn: '7d' }                  // Token expires in 7 days

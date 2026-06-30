@@ -97,6 +97,13 @@ router.post('/login', async (req, res) => {
         // If verification record exists and status is 'verified', set to true
         const isVerified = verification.length > 0 && verification[0].verification_status === 'verified';
 
+        // Block login if not verified
+        if (!isVerified) {
+            return res.status(403).json({ 
+                message: 'Your account is pending admin verification. Please wait for approval.' 
+            });
+        }
+
         // check for admin role
         let role = 'student';
         const [adminCheck] = await db.query(
